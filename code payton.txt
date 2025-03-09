@@ -1,0 +1,52 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+
+# داده‌های جدول را به صورت دیکشنری تعریف می‌کنیم
+data = {
+    'Alt': ['T', 'T', 'F', 'T', 'F', 'T', 'T', 'F', 'F', 'T', 'F', 'T'],
+    'Bar': ['F', 'F', 'F', 'F', 'T', 'F', 'F', 'T', 'T', 'F', 'F', 'T'],
+    'Fri': ['F', 'F', 'T', 'T', 'F', 'F', 'F', 'T', 'T', 'T', 'F', 'T'],
+    'Hun': ['T', 'T', 'F', 'T', 'T', 'T', 'F', 'T', 'F', 'T', 'F', 'T'],
+    'Pat': ['Some', 'Full', 'Some', 'Full', 'Full', 'Some', 'None', 'Some', 'Full', 'Full', 'None', 'Full'],
+    'Price': ['$', '$$$', '$', '$$', '$$$', '$', '$', '$$', '$$$', '$$$', '$', '$$'],
+    'Rain': ['F', 'F', 'F', 'F', 'F', 'T', 'T', 'T', 'T', 'F', 'F', 'F'],
+    'Res': ['T', 'F', 'F', 'F', 'T', 'T', 'F', 'T', 'F', 'T', 'F', 'F'],
+    'Type': ['French', 'Thai', 'Burger', 'Thai', 'French', 'Italian', 'Burger', 'Thai', 'Burger', 'Italian', 'Thai', 'Burger'],
+    'Est': ['0-10', '30-60', '0-10', '10-30', '>60', '0-10', '0-10', '0-10', '>60', '10-30', '0-10', '30-60'],
+    'Wait': ['T', 'F', 'T', 'T', 'F', 'T', 'F', 'T', 'F', 'F', 'F', 'T']
+}
+
+# ایجاد DataFrame از دیکشنری
+df = pd.DataFrame(data)
+
+# تبدیل ویژگی‌های دسته‌ای به عددی با استفاده از one-hot encoding
+df = pd.get_dummies(df, columns=['Alt', 'Bar', 'Fri', 'Hun', 'Pat', 'Price', 'Rain', 'Res', 'Type', 'Est'])
+
+# ویژگی‌های ورودی (X) و هدف (y) را جدا می‌کنیم
+X = df.drop('Wait', axis=1)
+y = df['Wait']
+
+# تقسیم داده‌ها به مجموعه‌های آموزشی و آزمایشی
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# ایجاد مدل درخت تصمیم
+model = DecisionTreeClassifier()
+
+# آموزش مدل با داده‌های آموزشی
+model.fit(X_train, y_train)
+# پیش‌بینی برچسب‌ها برای داده‌های آزمایشی
+y_pred = model.predict(X_test)
+
+# محاسبه دقت مدل
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy}')
+from sklearn.tree import export_graphviz
+import graphviz
+
+# ایجاد فایل .dot برای نمایش درخت
+dot_data = export_graphviz(model, out_file='tree.dot', feature_names=X.columns, class_names=['F', 'T'], filled=True, rounded=True, special_characters=True)
+
+# نمایش درخت با استفاده از graphviz
+graph = graphviz.Source(dot_data)
+graph.render('restaurant_decision_tree', view=True)
